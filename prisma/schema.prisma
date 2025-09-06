@@ -7,5 +7,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Models will be added in PR #2
+model User {
+  id          String       @id @default(uuid())
+  sub         String       @unique        // Google subject
+  email       String       @unique
+  name        String?
+  picture     String?
+  createdAt   DateTime     @default(now())
+  entitlement Entitlement?
+}
 
+model Entitlement {
+  userId           String   @id
+  user             User     @relation(fields: [userId], references: [id])
+  lifetime         Boolean  @default(false)
+  premiumActive    Boolean  @default(false)
+  trialStartedAt   DateTime?
+  trialExpiresAt   DateTime?
+  premiumExpiresAt DateTime?
+  updatedAt        DateTime @updatedAt
+}
