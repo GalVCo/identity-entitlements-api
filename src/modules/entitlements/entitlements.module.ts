@@ -7,5 +7,6 @@ import { PrismaModule } from '../../common/prisma/prisma.module';
   imports: [PrismaModule],
   controllers: [EntitlementsController],
   providers: [EntitlementsService],
+  exports: [EntitlementsService],
 })
 export class EntitlementsModule {}
