@@ -3,6 +3,9 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './modules/app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as dotenv from 'dotenv';
+import { ValidationPipe } from '@nestjs/common';
+import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 dotenv.config();
 
@@ -11,6 +14,11 @@ async function bootstrap() {
 
   // Global CORS (open in dev)
   app.enableCors({ origin: true, credentials: false });
+
+  // Global validation, filters, interceptors
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalInterceptors(new LoggingInterceptor());
 
   // Prefix API under /v1
   app.setGlobalPrefix('v1');
@@ -24,6 +32,10 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
+  const httpAdapter = app.getHttpAdapter();
+  httpAdapter.get('/docs-json', (req: any, res: any) => {
+    res.json(document);
+  });
 
   const port = Number(process.env.PORT || 8787);
   await app.listen(port);
