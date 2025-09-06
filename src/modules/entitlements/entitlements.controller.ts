@@ -1,29 +1,33 @@
-import { Controller, Get, Post } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../../common/auth/jwt-auth.guard';
+import { EntitlementsService } from './entitlements.service';
+import { Request } from 'express';
 
 @ApiTags('entitlements')
+@ApiBearerAuth()
 @Controller('entitlement')
 export class EntitlementsController {
+  constructor(private readonly svc: EntitlementsService) {}
+
+  @UseGuards(JwtAuthGuard)
   @Get()
-  getCurrent() {
-    return {
-      tier: 'trial',
-      lifetime: false,
-      premium_active: false,
-      trial_started_at: 0,
-      trial_expires_at: 0,
-      premium_expires_at: null,
-    };
+  async getCurrent(@Req() req: Request) {
+    const userId = (req as any).user?.id as string;
+    return this.svc.getForUser(userId);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('issue')
-  issue() {
-    return this.getCurrent();
+  async issue(@Req() req: Request) {
+    const userId = (req as any).user?.id as string;
+    return this.svc.issueIfMissing(userId);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('refresh')
-  refresh() {
-    return this.getCurrent();
+  async refresh(@Req() req: Request) {
+    const userId = (req as any).user?.id as string;
+    return this.svc.refresh(userId);
   }
 }
-
